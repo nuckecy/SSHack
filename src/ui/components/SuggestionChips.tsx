@@ -1,5 +1,4 @@
 import Icon from "./Icon";
-import { Button } from "./ui/button";
 
 interface SuggestionChipsProps {
   onChipClick: (query: string) => void;
@@ -16,15 +15,14 @@ export default function SuggestionChips({ onChipClick }: SuggestionChipsProps) {
   return (
     <div className="suggestion-chips">
       {SUGGESTIONS.map(({ label, icon, query }) => (
-        <Button
+        <button
           key={label}
-          variant="outline"
           className="chip"
           onClick={() => onChipClick(query)}
         >
           <Icon name={icon} size={14} />
           <span>{label}</span>
-        </Button>
+        </button>
       ))}
     </div>
   );

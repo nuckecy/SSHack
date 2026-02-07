@@ -272,6 +272,39 @@ a:hover {
   color: var(--cds-icon-primary);
 }
 
+/* ─── Header Tabs ──────────────────────────────────────────────── */
+
+.header-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.header-tab {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--cds-icon-secondary);
+  transition: background 150ms ease, color 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+
+.header-tab:hover {
+  background: var(--cds-layer-02);
+  color: var(--cds-icon-primary);
+}
+
+.header-tab.active {
+  color: var(--cds-interactive);
+  background: var(--cds-highlight);
+}
+
 /* ─── App Body ──────────────────────────────────────────────────── */
 
 .app-body {
@@ -703,18 +736,21 @@ a:hover {
   margin-bottom: 8px;
 }
 
-.expand-btn {
+.expand-btn,
+.sc-toggle-btn {
   background: none;
   border: none;
   color: var(--cds-interactive);
   cursor: pointer;
   font-size: 12px;
+  font-family: inherit;
   padding: 0;
   margin-left: 4px;
   text-decoration: none;
 }
 
-.expand-btn:hover {
+.expand-btn:hover,
+.sc-toggle-btn:hover {
   text-decoration: underline;
 }
 
@@ -1635,6 +1671,166 @@ a:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 150px;
+}
+
+/* ─── Selection Bar Actions ─────────────────────────────────────── */
+
+.selection-bar-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.selection-json-btn {
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 4px 10px;
+  border: 1px solid var(--cds-border-strong);
+  border-radius: var(--cds-radius-pill);
+  background: transparent;
+  color: var(--cds-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.selection-json-btn:hover {
+  background: var(--cds-layer-accent);
+  color: var(--cds-text-primary);
+  border-color: var(--cds-text-secondary);
+}
+
+/* ─── Design to JSON Panel ─────────────────────────────────────── */
+
+.json-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.json-panel-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--cds-border-subtle);
+  flex-shrink: 0;
+}
+
+.json-panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.json-panel-icon {
+  color: var(--cds-interactive);
+}
+
+.json-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cds-text-primary);
+  margin: 0;
+}
+
+.json-panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.json-panel-meta {
+  font-size: 11px;
+  color: var(--cds-text-secondary);
+  margin-top: 8px;
+}
+
+.json-panel-warning {
+  color: var(--cds-support-warning);
+  font-weight: 600;
+}
+
+.json-panel-viewer {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+}
+
+.json-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--cds-text-placeholder);
+  padding: 40px 20px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.json-panel-empty-icon {
+  color: var(--cds-border-strong);
+}
+
+/* JSON Syntax Highlighting */
+
+.json-pre {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  color: var(--cds-text-primary);
+}
+
+.json-key {
+  color: var(--cds-interactive);
+}
+
+.json-string {
+  color: var(--cds-support-success);
+}
+
+.json-number {
+  color: #e67e22;
+}
+
+.json-boolean {
+  color: var(--cds-level-aaa);
+}
+
+.json-null {
+  color: var(--cds-text-placeholder);
+}
+
+/* JSON panel scrollbar */
+
+.json-panel-viewer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.json-panel-viewer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.json-panel-viewer::-webkit-scrollbar-thumb {
+  background: var(--cds-border-subtle);
+  border-radius: 3px;
+}
+
+.json-panel-viewer::-webkit-scrollbar-thumb:hover {
+  background: var(--cds-text-placeholder);
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────── */

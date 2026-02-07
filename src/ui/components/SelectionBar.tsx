@@ -5,6 +5,7 @@ interface SelectionBarProps {
   selectionData: SelectionData | null;
   additionalCount?: number;
   onAskAbout: (query: string) => void;
+  onViewJson?: () => void;
 }
 
 function typeBadgeLabel(type: string): string {
@@ -27,7 +28,7 @@ function typeBadgeLabel(type: string): string {
   return map[type] || type;
 }
 
-export default function SelectionBar({ selectionData, additionalCount, onAskAbout }: SelectionBarProps) {
+export default function SelectionBar({ selectionData, additionalCount, onAskAbout, onViewJson }: SelectionBarProps) {
   if (!selectionData) {
     return (
       <div className="selection-bar selection-bar--empty">
@@ -56,9 +57,16 @@ export default function SelectionBar({ selectionData, additionalCount, onAskAbou
           <span className="selection-bar-more">(+{additionalCount} more)</span>
         )}
       </div>
-      <button className="selection-ask-btn" onClick={handleAsk}>
-        Ask about this
-      </button>
+      <div className="selection-bar-actions">
+        {onViewJson && (
+          <button className="selection-json-btn" onClick={onViewJson}>
+            {"{ } JSON"}
+          </button>
+        )}
+        <button className="selection-ask-btn" onClick={handleAsk}>
+          Ask about this
+        </button>
+      </div>
     </div>
   );
 }

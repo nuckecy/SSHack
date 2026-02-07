@@ -7,7 +7,6 @@ import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import SelectionBar from "./SelectionBar";
 import Icon from "./Icon";
-import { Button } from "./ui/button";
 
 interface ChatViewProps {
   messages: Message[];
@@ -18,6 +17,7 @@ interface ChatViewProps {
   chipTrigger: number;
   selectionData: SelectionData | null;
   additionalSelectionCount: number;
+  onViewJson?: () => void;
 }
 
 // Meta queries that get hardcoded responses
@@ -35,7 +35,7 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger, selectionData, additionalSelectionCount }: ChatViewProps) {
+export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger, selectionData, additionalSelectionCount, onViewJson }: ChatViewProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
@@ -288,33 +288,27 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
         selectionData={selectionData}
         additionalCount={additionalSelectionCount}
         onAskAbout={handleAskAbout}
+        onViewJson={onViewJson}
       />
 
       <div className="input-area">
-        <div className="input-wrapper">
-          <Button variant="ghost" size="icon-xs" className="text-muted-foreground" title="Attach" disabled>
-            <Icon name="paperclip" size={16} />
-          </Button>
-          <textarea
-            ref={textareaRef}
-            className="chat-input"
-            placeholder="Ask about design tokens..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            disabled={isLoading || streamingMsgId !== null}
-          />
-          <Button
-            size="icon"
-            className="rounded-full h-9 w-9 shrink-0"
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading || streamingMsgId !== null}
-          >
-            <Icon name="send_plane" size={16} />
-          </Button>
-        </div>
-        <span className="input-footer">SIDEKICK ENGINE V2.1</span>
+        <textarea
+          ref={textareaRef}
+          className="chat-input"
+          placeholder="Ask about accessibility..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          disabled={isLoading || streamingMsgId !== null}
+        />
+        <button
+          className="send-btn"
+          onClick={handleSend}
+          disabled={!input.trim() || isLoading || streamingMsgId !== null}
+        >
+          ↑
+        </button>
       </div>
     </div>
   );

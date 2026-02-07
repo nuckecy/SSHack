@@ -92,6 +92,206 @@ function extractVariantProperties(node: InstanceNode): Record<string, string> | 
   }
 }
 
+// ─── Deep serialization (Design to JSON) ──────────────────────
+
+const MAX_NODES = 5000;
+
+function serializeEffects(effects: readonly Effect[]): any[] {
+  return effects.map((e) => {
+    const base: any = { type: e.type, visible: e.visible !== false };
+    if (e.type === "DROP_SHADOW" || e.type === "INNER_SHADOW") {
+      const s = e as DropShadowEffect | InnerShadowEffect;
+      base.color = rgbToHex(s.color.r, s.color.g, s.color.b);
+      base.opacity = Math.round((s.color.a ?? 1) * 100);
+      base.offset = { x: s.offset.x, y: s.offset.y };
+      base.radius = s.radius;
+      base.spread = s.spread;
+    } else if (e.type === "LAYER_BLUR" || e.type === "BACKGROUND_BLUR") {
+      base.radius = (e as BlurEffect).radius;
+    }
+    return base;
+  });
+}
+
+function deepSerializeNode(node: SceneNode, counter: { count: number } = { count: 0 }): any {
+  if (counter.count >= MAX_NODES) return { _truncated: true };
+  counter.count++;
+
+  const data: any = {
+    id: node.id,
+    name: node.name,
+    type: node.type,
+    visible: node.visible,
+    locked: node.locked,
+  };
+
+  // Position & size
+  if ("x" in node) data.x = Math.round((node as any).x);
+  if ("y" in node) data.y = Math.round((node as any).y);
+  if ("width" in node) data.width = Math.round((node as any).width);
+  if ("height" in node) data.height = Math.round((node as any).height);
+  if ("rotation" in node) data.rotation = (node as any).rotation;
+
+  // Opacity & blend
+  if ("opacity" in node) data.opacity = (node as any).opacity;
+  if ("blendMode" in node) data.blendMode = (node as any).blendMode;
+
+  // Fills & strokes
+  if ("fills" in node) {
+    data.fills = serializePaints((node as GeometryMixin).fills);
+  }
+  if ("strokes" in node) {
+    data.strokes = serializePaints((node as GeometryMixin).strokes);
+  }
+  if ("strokeWeight" in node) {
+    const sw = (node as any).strokeWeight;
+    data.strokeWeight = sw === figma.mixed ? "MIXED" : sw;
+  }
+  if ("strokeAlign" in node) {
+    data.strokeAlign = (node as any).strokeAlign;
+  }
+
+  // Effects
+  if ("effects" in node) {
+    const effects = (node as any).effects as readonly Effect[];
+    if (effects.length > 0) {
+      data.effects = serializeEffects(effects);
+    }
+  }
+
+  // Corner radius
+  if ("cornerRadius" in node) {
+    const cr = (node as any).cornerRadius;
+    if (cr === figma.mixed) {
+      data.cornerRadius = {
+        topLeft: (node as any).topLeftRadius,
+        topRight: (node as any).topRightRadius,
+        bottomRight: (node as any).bottomRightRadius,
+        bottomLeft: (node as any).bottomLeftRadius,
+      };
+    } else {
+      data.cornerRadius = cr;
+    }
+  }
+
+  // Constraints
+  if ("constraints" in node) {
+    const c = (node as any).constraints;
+    if (c) data.constraints = { horizontal: c.horizontal, vertical: c.vertical };
+  }
+
+  // Auto-layout
+  if ("layoutMode" in node) {
+    const frame = node as FrameNode;
+    if (frame.layoutMode !== "NONE") {
+      data.autoLayout = {
+        layoutMode: frame.layoutMode,
+        itemSpacing: frame.itemSpacing,
+        counterAxisSpacing: (frame as any).counterAxisSpacing,
+        paddingTop: frame.paddingTop,
+        paddingRight: frame.paddingRight,
+        paddingBottom: frame.paddingBottom,
+        paddingLeft: frame.paddingLeft,
+        primaryAxisAlignItems: frame.primaryAxisAlignItems,
+        counterAxisAlignItems: frame.counterAxisAlignItems,
+        layoutSizingHorizontal: (frame as any).layoutSizingHorizontal,
+        layoutSizingVertical: (frame as any).layoutSizingVertical,
+      };
+    }
+  }
+
+  // Text properties
+  if (node.type === "TEXT") {
+    const t = node as TextNode;
+    const fontSize = t.fontSize;
+    const fontName = t.fontName;
+    const lineHeight = t.lineHeight;
+    const letterSpacing = t.letterSpacing;
+    data.text = {
+      characters: t.characters,
+      fontSize: fontSize === figma.mixed ? "MIXED" : fontSize,
+      fontName: fontName === figma.mixed
+        ? "MIXED"
+        : `${(fontName as FontName).family} ${(fontName as FontName).style}`,
+      lineHeight: lineHeight === figma.mixed
+        ? "MIXED"
+        : (() => {
+            const lh = lineHeight as LineHeight;
+            if (lh.unit === "AUTO") return "AUTO";
+            return `${(lh as any).value}${lh.unit === "PERCENT" ? "%" : "px"}`;
+          })(),
+      letterSpacing: letterSpacing === figma.mixed
+        ? "MIXED"
+        : (() => {
+            const ls = letterSpacing as LetterSpacing;
+            return `${(ls as any).value}${ls.unit === "PERCENT" ? "%" : "px"}`;
+          })(),
+      textAlignHorizontal: t.textAlignHorizontal,
+      textAlignVertical: t.textAlignVertical,
+      textAutoResize: t.textAutoResize,
+    };
+  }
+
+  // Component info
+  if (node.type === "INSTANCE") {
+    const instance = node as InstanceNode;
+    const main = instance.mainComponent;
+    if (main) {
+      data.componentInfo = {
+        componentName: main.name,
+        description: main.description || undefined,
+        remote: main.remote,
+        key: main.key,
+        componentProperties: extractVariantProperties(instance),
+        componentSetName: main.parent?.type === "COMPONENT_SET" ? main.parent.name : undefined,
+      };
+    }
+  } else if (node.type === "COMPONENT") {
+    const comp = node as ComponentNode;
+    data.componentInfo = {
+      componentName: comp.name,
+      description: comp.description || undefined,
+      remote: comp.remote,
+      key: comp.key,
+      componentSetName: comp.parent?.type === "COMPONENT_SET" ? comp.parent.name : undefined,
+    };
+  } else if (node.type === "COMPONENT_SET") {
+    const set = node as ComponentSetNode;
+    data.componentInfo = {
+      componentName: set.name,
+      description: set.description || undefined,
+      remote: set.remote,
+      key: set.key,
+    };
+  }
+
+  // Children — recursive, no depth limit, but capped by MAX_NODES
+  if ("children" in node) {
+    const children = (node as ChildrenMixin & SceneNode).children;
+    data.children = [];
+    for (const child of children) {
+      if (counter.count >= MAX_NODES) {
+        data.children.push({ _truncated: true, _remaining: children.length - data.children.length });
+        break;
+      }
+      data.children.push(deepSerializeNode(child, counter));
+    }
+  }
+
+  return data;
+}
+
+function countNodes(obj: any): number {
+  let count = 1;
+  if (obj.children && Array.isArray(obj.children)) {
+    for (const child of obj.children) {
+      if (child._truncated) continue;
+      count += countNodes(child);
+    }
+  }
+  return count;
+}
+
 function inspectNode(node: SceneNode): any {
   const data: any = {
     id: node.id,
@@ -271,6 +471,20 @@ figma.ui.onmessage = async (msg: { type: string; [key: string]: any }) => {
           data.additionalCount = selection.length - 1;
         }
         figma.ui.postMessage({ type: "selection", data });
+      }
+      break;
+    }
+
+    case "serialize-to-json": {
+      const selection = figma.currentPage.selection;
+      if (selection.length === 0) {
+        figma.ui.postMessage({ type: "serialize-to-json-result", data: null, error: "No selection" });
+      } else {
+        const counter = { count: 0 };
+        const data = deepSerializeNode(selection[0], counter);
+        const nodeCount = countNodes(data);
+        const truncated = counter.count >= MAX_NODES;
+        figma.ui.postMessage({ type: "serialize-to-json-result", data, nodeCount, truncated });
       }
       break;
     }

@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import ChatView from "./components/ChatView";
 import SettingsPanel from "./components/SettingsPanel";
+import DesignToJsonPanel from "./components/DesignToJsonPanel";
 import Icon from "./components/Icon";
-import { Button } from "./components/ui/button";
-import { Badge } from "./components/ui/badge";
 import type { Message, ProviderId, ProviderKeys, SelectionData } from "./providers/types";
 import { PROVIDER_IDS } from "./providers/registry";
+
+type ActiveView = "chat" | "json" | "settings";
 
 const STORAGE_PREFIX = "ss_key_";
 const STORAGE_ACTIVE = "ss_active_provider";
@@ -26,7 +27,7 @@ function safeRemoveItem(key: string): void {
 
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
+  const [activeView, setActiveView] = useState<ActiveView>("chat");
   const [providerKeys, setProviderKeys] = useState<ProviderKeys>(EMPTY_KEYS);
   const [activeProvider, setActiveProvider] = useState<ProviderId>("gemini");
   const [selectionData, setSelectionData] = useState<SelectionData | null>(null);
@@ -151,47 +152,54 @@ export default function App() {
         <div className="header-left">
           <Icon name="shield" size={20} className="header-logo-icon" />
           <span className="header-title">System Sidekick</span>
-          <Badge
-            variant={hasApiKey ? "default" : "secondary"}
-            className={
-              hasApiKey
-                ? "gap-1.5 bg-[var(--cds-support-success)]/10 text-[var(--cds-support-success)] text-[10px] uppercase tracking-wide border-transparent"
-                : "gap-1.5 text-[10px] uppercase tracking-wide border-transparent"
-            }
-          >
-            <span className={`status-badge-dot ${hasApiKey ? "bg-[var(--cds-support-success)]" : "bg-muted-foreground"}`} />
-            {hasApiKey ? "ACTIVE" : "OFFLINE"}
-          </Badge>
+          <span className={`status-badge ${hasApiKey ? "active" : "inactive"}`}>
+            <span className="status-badge-dot" />
+            {hasApiKey ? "AI" : "Offline"}
+          </span>
         </div>
         <div className="header-right">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setShowSettings(!showSettings)}
-            title="Settings"
-          >
-            <Icon name="settings" size={16} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleClearChat}
-            title="Clear chat"
-          >
-            <Icon name="close" size={16} />
-          </Button>
+          <div className="header-tabs">
+            <button
+              className={`header-tab${activeView === "chat" ? " active" : ""}`}
+              onClick={() => setActiveView("chat")}
+              title="Chat"
+            >
+              <Icon name="chat" size={14} />
+            </button>
+            <button
+              className={`header-tab${activeView === "json" ? " active" : ""}`}
+              onClick={() => setActiveView("json")}
+              title="Design to JSON"
+            >
+              <Icon name="code" size={14} />
+            </button>
+            <button
+              className={`header-tab${activeView === "settings" ? " active" : ""}`}
+              onClick={() => setActiveView("settings")}
+              title="Settings"
+            >
+              <Icon name="settings" size={14} />
+            </button>
+          </div>
+          {activeView === "chat" && (
+            <button className="icon-btn" onClick={handleClearChat} title="Clear chat">
+              <Icon name="close" size={16} />
+            </button>
+          )}
         </div>
       </header>
 
-      {showSettings ? (
+      {activeView === "settings" ? (
         <SettingsPanel
           providerKeys={providerKeys}
           activeProvider={activeProvider}
           onSaveKey={handleSaveKey}
           onRemoveKey={handleRemoveKey}
           onSetActiveProvider={handleSetActiveProvider}
-          onClose={() => setShowSettings(false)}
+          onClose={() => setActiveView("chat")}
         />
+      ) : activeView === "json" ? (
+        <DesignToJsonPanel selectionData={selectionData} />
       ) : (
         <div className="app-body">
           <ChatView
@@ -203,6 +211,7 @@ export default function App() {
             chipTrigger={chipTrigger}
             selectionData={selectionData}
             additionalSelectionCount={additionalSelectionCount}
+            onViewJson={() => setActiveView("json")}
           />
         </div>
       )}
