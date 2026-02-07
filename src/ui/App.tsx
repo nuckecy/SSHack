@@ -1,17 +1,15 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ChatView from "./components/ChatView";
 import SettingsPanel from "./components/SettingsPanel";
-import SuggestionChips from "./components/SuggestionChips";
 import Icon from "./components/Icon";
+import { Button } from "./components/ui/button";
+import { Badge } from "./components/ui/badge";
 import type { Message, ProviderId, ProviderKeys } from "./providers/types";
-import { PROVIDER_CONFIGS, PROVIDER_IDS } from "./providers/registry";
+import { PROVIDER_IDS } from "./providers/registry";
 
 const STORAGE_PREFIX = "ss_key_";
 const STORAGE_ACTIVE = "ss_active_provider";
 const OLD_STORAGE_KEY = "ss_gemini_key";
-
-const WIDTH_PANEL_OPEN = 670;
-const WIDTH_PANEL_CLOSED = 420;
 
 const EMPTY_KEYS: ProviderKeys = { gemini: "", anthropic: "", openai: "" };
 
@@ -31,11 +29,6 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [providerKeys, setProviderKeys] = useState<ProviderKeys>(EMPTY_KEYS);
   const [activeProvider, setActiveProvider] = useState<ProviderId>("gemini");
-  const [showPanel, setShowPanel] = useState(true);
-
-  // Ref to allow ChatView's chip handler to access current state
-  const chipQueryRef = React.useRef<string | null>(null);
-  const [chipTrigger, setChipTrigger] = useState(0);
 
   // Load all provider keys and active provider on mount
   useEffect(() => {
@@ -135,41 +128,41 @@ export default function App() {
     setMessages([]);
   }, []);
 
-  const handleTogglePanel = useCallback(() => {
-    setShowPanel((prev) => {
-      const next = !prev;
-      const width = next ? WIDTH_PANEL_OPEN : WIDTH_PANEL_CLOSED;
-      parent.postMessage({ pluginMessage: { type: "resize", width, height: 640 } }, "*");
-      return next;
-    });
-  }, []);
-
-  const handleChipClick = useCallback((query: string) => {
-    chipQueryRef.current = query;
-    setChipTrigger((n) => n + 1);
-  }, []);
-
-  const providerDisplayName = PROVIDER_CONFIGS[activeProvider].name;
-
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-left">
-          <button
-            className="icon-btn"
-            onClick={handleTogglePanel}
-            title={showPanel ? "Hide guide panel" : "Show guide panel"}
-          >
-            <Icon name="menu" size={16} />
-          </button>
           <Icon name="shield" size={20} className="header-logo-icon" />
           <span className="header-title">System Sidekick</span>
+          <Badge
+            variant={hasApiKey ? "default" : "secondary"}
+            className={
+              hasApiKey
+                ? "gap-1.5 bg-[var(--cds-support-success)]/10 text-[var(--cds-support-success)] text-[10px] uppercase tracking-wide border-transparent"
+                : "gap-1.5 text-[10px] uppercase tracking-wide border-transparent"
+            }
+          >
+            <span className={`status-badge-dot ${hasApiKey ? "bg-[var(--cds-support-success)]" : "bg-muted-foreground"}`} />
+            {hasApiKey ? "ACTIVE" : "OFFLINE"}
+          </Badge>
         </div>
         <div className="header-right">
-          <span className="header-badge">WCAG 2.2</span>
-          <span className={`ai-badge ${hasApiKey ? "active" : "inactive"}`}>
-            {hasApiKey ? "\u2713" : "\u2715"} {providerDisplayName}
-          </span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setShowSettings(!showSettings)}
+            title="Settings"
+          >
+            <Icon name="settings" size={16} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleClearChat}
+            title="Clear chat"
+          >
+            <Icon name="close" size={16} />
+          </Button>
         </div>
       </header>
 
@@ -184,48 +177,11 @@ export default function App() {
         />
       ) : (
         <div className="app-body">
-          {showPanel && (
-            <aside className="side-panel">
-              <div className="side-panel-content">
-                <div className="side-panel-welcome">
-                  <strong>Welcome to System Sidekick!</strong>
-                  <p>
-                    Your WCAG 2.2 accessibility assistant.{" "}
-                    {hasApiKey
-                      ? `AI-powered responses via ${providerDisplayName} are enabled.`
-                      : "Running in keyword search mode. Add an API key in Settings to enable AI responses."}
-                  </p>
-                </div>
-                <div className="side-panel-section">
-                  <span className="side-panel-label">Try asking about:</span>
-                  <SuggestionChips onChipClick={handleChipClick} />
-                </div>
-              </div>
-              <div className="side-panel-footer">
-                <button
-                  className="icon-btn"
-                  onClick={() => setShowSettings(!showSettings)}
-                  title="Settings"
-                >
-                  <Icon name="settings" size={16} />
-                </button>
-                <button
-                  className="icon-btn"
-                  onClick={handleClearChat}
-                  title="Clear chat"
-                >
-                  <Icon name="delete" size={16} />
-                </button>
-              </div>
-            </aside>
-          )}
           <ChatView
             messages={messages}
             setMessages={setMessages}
             apiKey={activeKey}
             activeProvider={activeProvider}
-            chipQueryRef={chipQueryRef}
-            chipTrigger={chipTrigger}
           />
         </div>
       )}

@@ -1,18 +1,20 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { Message, ConversationTurn, WCAGCriterion, ProviderId } from "../providers/types";
 import { PROVIDERS } from "../providers/registry";
 import { buildPrompt } from "../knowledge/prompt-builder";
 import { searchWCAG } from "../knowledge/search";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
+import SuggestionChips from "./SuggestionChips";
+import Icon from "./Icon";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface ChatViewProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   apiKey: string;
   activeProvider: ProviderId;
-  chipQueryRef: React.MutableRefObject<string | null>;
-  chipTrigger: number;
 }
 
 // Meta queries that get hardcoded responses
@@ -30,7 +32,7 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger }: ChatViewProps) {
+export default function ChatView({ messages, setMessages, apiKey, activeProvider }: ChatViewProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -50,7 +52,7 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      const lineHeight = 18.2; // 13px font * 1.4 line-height
+      const lineHeight = 18.2;
       const maxHeight = lineHeight * 10;
       textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
       const isScrollable = textarea.scrollHeight > maxHeight;
@@ -103,7 +105,6 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
       const { systemPrompt, matchedCriteria } = buildPrompt(query);
 
       if (hasApiKey) {
-        // AI mode: send to active provider with WCAG context
         try {
           const aiResponse = await PROVIDERS[activeProvider].sendMessage(
             query,
@@ -112,16 +113,13 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
             apiKey
           );
 
-          // Update conversation history
           historyRef.current.push(
             { role: "user", text: query },
             { role: "assistant", text: aiResponse }
           );
 
-          // Add bot message with optional SC cards
           addMessage("bot", aiResponse, matchedCriteria.length > 0 ? matchedCriteria : undefined);
         } catch (err) {
-          // AI failed — fall back to keyword results
           const errorMsg =
             err instanceof Error ? err.message : "Unknown error";
           console.error("AI error:", errorMsg);
@@ -140,7 +138,6 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
           }
         }
       } else {
-        // Keyword-only mode
         const results = searchWCAG(query, 5);
         if (results.length > 0) {
           addMessage(
@@ -160,8 +157,8 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     }
   }, [input, isLoading, hasApiKey, apiKey, activeProvider, addMessage]);
 
-  // Handle chip clicks from side panel
-  const processChipQuery = useCallback((query: string) => {
+  const handleChipClick = useCallback((query: string) => {
+    setInput("");
     addMessage("user", query);
     setIsLoading(true);
 
@@ -200,15 +197,6 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     }
   }, [hasApiKey, apiKey, activeProvider, addMessage]);
 
-  // Watch for chip trigger from parent
-  useEffect(() => {
-    if (chipTrigger > 0 && chipQueryRef.current) {
-      const query = chipQueryRef.current;
-      chipQueryRef.current = null;
-      processChipQuery(query);
-    }
-  }, [chipTrigger, chipQueryRef, processChipQuery]);
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -216,36 +204,61 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     }
   };
 
+  const isEmpty = messages.length === 0 && !isLoading;
+
   return (
     <div className="chat-view">
-      <div className="messages-area">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-
-        {isLoading && <TypingIndicator />}
-
-        <div ref={messagesEndRef} />
-      </div>
+      <ScrollArea className="flex-1">
+        <div className="messages-area">
+          {isEmpty ? (
+            <div className="welcome-hero">
+              <div className="welcome-hero-image">
+                <Icon name="sparkle" size={40} className="welcome-sparkle-icon" />
+              </div>
+              <h2 className="welcome-hero-title">Your Design System Assistant</h2>
+              <p className="welcome-hero-subtitle">
+                Ask me anything about components, tokens, patterns, or accessibility guidelines.
+              </p>
+              <SuggestionChips onChipClick={handleChipClick} />
+              <p className="welcome-hero-hint">Type a message to start designing</p>
+            </div>
+          ) : (
+            <>
+              {messages.map((msg) => (
+                <MessageBubble key={msg.id} message={msg} />
+              ))}
+              {isLoading && <TypingIndicator />}
+            </>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
       <div className="input-area">
-        <textarea
-          ref={textareaRef}
-          className="chat-input"
-          placeholder="Ask about accessibility..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          disabled={isLoading}
-        />
-        <button
-          className="send-btn"
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading}
-        >
-          ↑
-        </button>
+        <div className="input-wrapper">
+          <Button variant="ghost" size="icon-xs" className="text-muted-foreground" title="Attach" disabled>
+            <Icon name="paperclip" size={16} />
+          </Button>
+          <textarea
+            ref={textareaRef}
+            className="chat-input"
+            placeholder="Ask about design tokens..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            disabled={isLoading}
+          />
+          <Button
+            size="icon"
+            className="rounded-full h-9 w-9 shrink-0"
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+          >
+            <Icon name="send_plane" size={16} />
+          </Button>
+        </div>
+        <span className="input-footer">SIDEKICK ENGINE V2.1</span>
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { ProviderId, ProviderKeys } from "../providers/types";
 import { PROVIDERS, PROVIDER_CONFIGS, PROVIDER_IDS } from "../providers/registry";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 
 interface SettingsPanelProps {
   providerKeys: ProviderKeys;
@@ -31,7 +34,8 @@ export default function SettingsPanel({
   const hasSavedKey = savedKey.length > 0;
   const maskedKey = hasSavedKey ? savedKey.slice(0, 8) + "..." : "";
 
-  const handleTabClick = (id: ProviderId) => {
+  const handleTabChange = (value: string) => {
+    const id = value as ProviderId;
     setSelectedTab(id);
     onSetActiveProvider(id);
     setTestStatus("idle");
@@ -81,25 +85,29 @@ export default function SettingsPanel({
     <div className="settings-panel">
       <div className="settings-header">
         <h3>Settings</h3>
-        <button className="icon-btn" onClick={onClose}>
+        <Button variant="ghost" size="icon-sm" onClick={onClose}>
           ✕
-        </button>
+        </Button>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">AI Provider</label>
-        <div className="provider-tabs">
+        <Tabs value={selectedTab} onValueChange={handleTabChange}>
+          <TabsList className="w-full">
+            {PROVIDER_IDS.map((id) => (
+              <TabsTrigger key={id} value={id} className="flex-1 gap-1.5">
+                {providerKeys[id] && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cds-support-success)] shrink-0" />
+                )}
+                {PROVIDER_CONFIGS[id].name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
           {PROVIDER_IDS.map((id) => (
-            <button
-              key={id}
-              className={`provider-tab ${selectedTab === id ? "active" : ""}`}
-              onClick={() => handleTabClick(id)}
-            >
-              {providerKeys[id] && <span className="key-dot" />}
-              {PROVIDER_CONFIGS[id].name}
-            </button>
+            <TabsContent key={id} value={id} />
           ))}
-        </div>
+        </Tabs>
       </div>
 
       <div className="settings-section">
@@ -121,31 +129,30 @@ export default function SettingsPanel({
           </div>
         )}
 
-        <input
+        <Input
           type="password"
-          className="key-input"
           placeholder={config.keyPlaceholder}
           value={inputKeys[selectedTab]}
           onChange={(e) =>
             setInputKeys((prev) => ({ ...prev, [selectedTab]: e.target.value }))
           }
+          className="mb-3"
         />
 
-        <div className="settings-actions">
-          <button
-            className="btn btn-primary"
+        <div className="flex gap-2 flex-wrap">
+          <Button
             onClick={handleSave}
             disabled={!inputKeys[selectedTab].trim()}
           >
             Save Key
-          </button>
-          <button className="btn btn-secondary" onClick={handleTest}>
+          </Button>
+          <Button variant="outline" onClick={handleTest}>
             Test Connection
-          </button>
+          </Button>
           {hasSavedKey && (
-            <button className="btn btn-danger" onClick={handleRemove}>
+            <Button variant="destructive" onClick={handleRemove}>
               Remove Key
-            </button>
+            </Button>
           )}
         </div>
 

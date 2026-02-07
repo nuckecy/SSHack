@@ -1,0 +1,29 @@
+# System Sidekick — Figma Component Keys
+# Source: Obra ShadCN UI Kit (Community Edition)
+# File ID: torguFXlljDhUckAFD5yMj
+# URL: https://www.figma.com/file/torguFXlljDhUckAFD5yMj/Obra-shadcn-ui-kit-community-edition--Community-
+#
+# HOW TO EXTRACT KEYS:
+# 1. Open the Figma file above
+# 2. Find the component (e.g., Button)
+# 3. Right-click the component → "Copy link"
+# 4. Paste the URL — the node-id parameter is the key
+#    Example: ...?node-id=273-30945 → key is "273-30945"
+# 5. Update this file and shadcn-components.json with the key
+
+# ── KEYS EXTRACTED ──────────────────────────────────
+alert: 4d087b2a45937db2a0dae72ef45cd5439e3d05d5
+alert-dialog: 5ec2ea8cc19e86eabbc97009dcfd09c278df5d15
+badge: 9f1d7f74487b9fb495d8ec983b56524a8c880d56
+button: 96c2d89a4708a7d5b8f24ff7a1811cdac494f0c1
+card: 0d0593d7566998757474f2332e175189fff62324
+checkbox: a32542edf78409a815f0207db8f95c311e2df7a2
+dialog: 2f06d4e1b267f63ebd8cd5036d28ed53054e1a0
+hover-card: 8b051d04c608d5def0db97ca6832051c11b24bb7
+input: cab7a702a3b694c3020e053f2fd56298cbede750
+navigation-menu: 9094a387713908f449b6827ac01deff4a4cddb24
+radio: dcf0893d3b8f903343da59b64d370e98062012b7
+radio-group: 20be41c05b9404f9b6089a724ba1bb9a76f14ea3
+select: 32b979d28da779733189397c84a5dc15c606c904
+switch: aca9f69add49b84c30db9d138358601b33b4e744
+tooltip: bcf0e4a897bd9c962d74ea5deab85ac3b2626afd

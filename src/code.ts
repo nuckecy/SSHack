@@ -2,7 +2,7 @@
 // Has access to Figma API but NO DOM, NO fetch, NO browser APIs
 
 figma.showUI(__html__, {
-  width: 670,
+  width: 420,
   height: 640,
   themeColors: true,
 });
