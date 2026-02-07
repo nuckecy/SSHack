@@ -1,0 +1,223 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Layout ──────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+
+/* ── Header ──────────────────────────────────────── */
+
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #e5e5e5;
+  background: white;
+}
+
+.header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.header p {
+  font-size: 12px;
+  color: #666;
+}
+
+.context-badge {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: #f0f0ff;
+  border: 1px solid #d0d0ff;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #4444cc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Messages ────────────────────────────────────── */
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.empty-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestion {
+  padding: 10px 14px;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #444;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.suggestion:hover {
+  border-color: #0066ff;
+  color: #0066ff;
+}
+
+.message {
+  margin-bottom: 12px;
+  max-width: 85%;
+}
+
+.message-user {
+  margin-left: auto;
+}
+
+.message-assistant {
+  margin-right: auto;
+}
+
+.message-content {
+  padding: 10px 14px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.message-user .message-content {
+  background: #0066ff;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-assistant .message-content {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-bottom-left-radius: 4px;
+}
+
+/* ── Place Button ────────────────────────────────── */
+
+.place-button {
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.place-button:hover {
+  background: #0052cc;
+}
+
+/* ── Loading Dots ────────────────────────────────── */
+
+.loading {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #999;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* ── Input Area ──────────────────────────────────── */
+
+.input-area {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e5e5;
+  background: white;
+  display: flex;
+  gap: 8px;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-area input:focus {
+  border-color: #0066ff;
+}
+
+.input-area input:disabled {
+  opacity: 0.5;
+}
+
+.input-area button {
+  padding: 8px 16px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.input-area button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.input-area button:hover:not(:disabled) {
+  background: #0052cc;
+}

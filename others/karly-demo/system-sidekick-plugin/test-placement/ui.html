@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Inter, -apple-system, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background: #fafafa;
+      font-size: 13px;
+    }
+    h3 { font-size: 14px; margin: 0 0 4px 0; }
+    p { font-size: 12px; color: #666; margin: 0 0 12px 0; }
+    hr { border: none; border-top: 1px solid #e5e5e5; margin: 16px 0; }
+    button {
+      padding: 8px 14px;
+      background: #0066ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    button:hover { background: #0052cc; }
+    #output {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+    input:focus { outline: none; border-color: #0066ff; }
+    .success { color: #1a7a1a; }
+    .error { color: #c53030; }
+  </style>
+</head>
+<body>
+  <h3>Step 1: Extract Keys</h3>
+  <p>In the Obra ShadCN file, select a component, then click:</p>
+  <button onclick="extract()">Extract Keys from Selection</button>
+
+  <div id="output">Select a component and click the button above.</div>
+
+  <hr>
+
+  <h3>Step 2: Test Placement</h3>
+  <p>Paste a KEY from above to test placing it:</p>
+  <input type="text" id="keyinput" placeholder="Paste component key here..." />
+  <button onclick="place()">Test Place</button>
+  <div id="result"></div>
+
+  <script>
+    function extract() {
+      document.getElementById('output').textContent = 'Extracting...';
+      parent.postMessage({ pluginMessage: { type: 'extract-keys' } }, '*');
+    }
+
+    function place() {
+      var key = document.getElementById('keyinput').value.trim();
+      if (!key) { document.getElementById('result').textContent = 'Enter a key first'; return; }
+      document.getElementById('result').textContent = 'Placing...';
+      document.getElementById('result').className = '';
+      parent.postMessage({ pluginMessage: { type: 'test-placement', key: key } }, '*');
+    }
+
+    window.onmessage = function(event) {
+      var msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === 'keys-result') {
+        document.getElementById('output').textContent = msg.text;
+      }
+      if (msg.type === 'result') {
+        document.getElementById('result').textContent = msg.text;
+        document.getElementById('result').className = msg.cls || '';
+      }
+    };
+  </script>
+</body>
+</html>

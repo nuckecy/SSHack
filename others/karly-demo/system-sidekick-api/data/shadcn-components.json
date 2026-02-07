@@ -1,0 +1,655 @@
+{
+  "designSystem": "ShadCN (Obra UI Kit)",
+  "figmaFileId": "torguFXlljDhUckAFD5yMj",
+  "components": [
+    {
+      "name": "Button",
+      "figmaKey": "96c2d89a4708a7d5b8f24ff7a1811cdac494f0c1",
+      "designSystem": "ShadCN",
+      "purpose": "Triggers an action or event — the primary interactive element for user actions",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "96c2d89a4708a7d5b8f24ff7a1811cdac494f0c1",
+          "when": "Primary action. Main CTA. Use one per section for clear hierarchy.",
+          "tokens": {
+            "background": "bg-primary",
+            "text": "text-primary-foreground",
+            "hover": "hover:bg-primary/90"
+          }
+        },
+        {
+          "name": "secondary",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Secondary actions with balanced visual weight. Pair with a default button.",
+          "tokens": {
+            "background": "bg-secondary",
+            "text": "text-secondary-foreground",
+            "hover": "hover:bg-secondary/80"
+          }
+        },
+        {
+          "name": "destructive",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Dangerous actions like deletion or removal. Always pair with confirmation.",
+          "tokens": {
+            "background": "bg-destructive",
+            "text": "text-destructive-foreground",
+            "hover": "hover:bg-destructive/90"
+          }
+        },
+        {
+          "name": "outline",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Secondary actions with less emphasis. Good for cancel buttons or alternative actions.",
+          "tokens": {
+            "border": "border border-input",
+            "background": "bg-background",
+            "hover": "hover:bg-accent hover:text-accent-foreground"
+          }
+        },
+        {
+          "name": "ghost",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Tertiary actions with minimal emphasis. Toolbars, inline actions, subtle UI.",
+          "tokens": {
+            "hover": "hover:bg-accent hover:text-accent-foreground"
+          }
+        },
+        {
+          "name": "link",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Navigation actions styled as text links. Use when action resembles a hyperlink.",
+          "tokens": {
+            "text": "text-primary",
+            "hover": "underline-offset-4 hover:underline"
+          }
+        }
+      ],
+      "sizes": ["xs", "sm", "default", "lg", "icon-xs", "icon-sm", "icon-lg"],
+      "accessibility": {
+        "minSize": "h-10 (40px minimum touch target)",
+        "keyboard": "Space and Enter to activate",
+        "focus": "focus-visible:ring-2 ring-ring ring-offset-2",
+        "aria": "Use semantic <button> element. Use aria-label for icon-only buttons."
+      },
+      "antiPatterns": [
+        "Don't use multiple default buttons in one section — breaks visual hierarchy",
+        "Don't use destructive variant without a confirmation step",
+        "Don't use Button for navigation — use Link instead",
+        "Don't use ghost variant for critical actions — too subtle",
+        "Don't omit labels on icon-only buttons (use aria-label)"
+      ],
+      "examples": [
+        "Form submissions: default variant",
+        "Delete actions: destructive variant with Alert Dialog confirmation",
+        "Cancel actions: outline variant",
+        "Toolbar actions: ghost variant",
+        "Secondary CTA: secondary variant"
+      ]
+    },
+    {
+      "name": "Alert",
+      "figmaKey": "8-283",
+      "designSystem": "ShadCN",
+      "purpose": "Displays a callout for important information that needs user attention",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "8-283",
+          "when": "General information, tips, or neutral status messages.",
+          "tokens": {
+            "background": "bg-background",
+            "border": "border",
+            "text": "text-foreground"
+          }
+        },
+        {
+          "name": "destructive",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Errors, warnings, or critical information that requires immediate attention.",
+          "tokens": {
+            "border": "border-destructive/50",
+            "text": "text-destructive",
+            "icon": "text-destructive"
+          }
+        }
+      ],
+      "subcomponents": ["AlertTitle", "AlertDescription"],
+      "accessibility": {
+        "role": "Implicit alert role through semantic structure",
+        "keyboard": "Not interactive — informational only",
+        "focus": "Not focusable (content only)",
+        "aria": "Use AlertTitle for heading hierarchy. Include icon + text (don't rely on color alone)."
+      },
+      "antiPatterns": [
+        "Don't overuse alerts — reserve for genuinely important information",
+        "Don't rely solely on color to convey meaning — always include icon + text",
+        "Don't stack multiple alerts without clear information hierarchy",
+        "Don't use alerts for transient notifications — use Toast instead"
+      ],
+      "examples": [
+        "Form validation errors: destructive variant",
+        "Success confirmation: default variant with check icon",
+        "Important notices: default variant with info icon",
+        "System warnings: destructive variant with alert icon"
+      ]
+    },
+    {
+      "name": "Alert Dialog",
+      "figmaKey": "295-239548",
+      "designSystem": "ShadCN",
+      "purpose": "Modal dialog for critical confirmations that require explicit user response before proceeding",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "295-239548",
+          "when": "Destructive or irreversible actions requiring confirmation (delete, remove, discard).",
+          "tokens": {
+            "overlay": "bg-black/80",
+            "content": "bg-background",
+            "border": "border"
+          }
+        }
+      ],
+      "subcomponents": ["AlertDialogTrigger", "AlertDialogContent", "AlertDialogHeader", "AlertDialogTitle", "AlertDialogDescription", "AlertDialogFooter", "AlertDialogAction", "AlertDialogCancel"],
+      "accessibility": {
+        "keyboard": "Escape to close. Tab cycles through actions. Enter activates focused button.",
+        "focus": "Focus trapped within dialog when open. Returns to trigger on close.",
+        "aria": "AlertDialogTitle and AlertDialogDescription announced to screen readers.",
+        "role": "alertdialog role applied automatically"
+      },
+      "antiPatterns": [
+        "Don't use for simple information — use Alert instead",
+        "Don't use for navigation or non-critical actions",
+        "Don't nest dialogs within dialogs",
+        "Don't remove the cancel option — always give users an escape route",
+        "Don't use for single-action confirmations — those should be inline"
+      ],
+      "examples": [
+        "Delete confirmation: 'Are you sure you want to delete this item?'",
+        "Discard unsaved changes: 'You have unsaved changes. Discard?'",
+        "Account actions: 'This will permanently delete your account.'"
+      ]
+    },
+    {
+      "name": "Input",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Text input for forms and data entry with built-in styling and accessibility",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Standard text entry. Most common form input.",
+          "tokens": {
+            "border": "border border-input",
+            "background": "bg-background",
+            "text": "text-sm",
+            "focus": "focus-visible:ring-2 ring-ring"
+          }
+        },
+        {
+          "name": "file",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "File uploads. Set type='file'.",
+          "tokens": {
+            "file": "file:border-0 file:bg-transparent file:text-sm file:font-medium"
+          }
+        },
+        {
+          "name": "disabled",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Non-interactive state. Use when input is contextually unavailable.",
+          "tokens": {
+            "opacity": "disabled:opacity-50",
+            "cursor": "disabled:cursor-not-allowed"
+          }
+        },
+        {
+          "name": "invalid",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Validation error state. Pair with error message below.",
+          "tokens": {
+            "aria": "aria-invalid=\"true\"",
+            "field": "data-invalid on Field wrapper"
+          }
+        }
+      ],
+      "subcomponents": ["Field", "FieldLabel", "FieldDescription", "InputGroup", "ButtonGroup"],
+      "accessibility": {
+        "keyboard": "Tab to focus, standard text editing keys",
+        "focus": "Visible focus ring required",
+        "aria": "Use aria-invalid for error states. Always pair with a label (FieldLabel or <label>).",
+        "required": "Mark required fields with asterisk and required attribute"
+      },
+      "antiPatterns": [
+        "Don't use placeholder as the only label — always include a visible label",
+        "Don't show invalid state without an accompanying error message",
+        "Don't use disabled inputs without explaining why they're disabled",
+        "Don't omit required field indicators"
+      ],
+      "examples": [
+        "Login form: email + password inputs with labels",
+        "Search: input with search icon in InputGroup",
+        "File upload: type='file' variant",
+        "Form validation: invalid state with FieldError"
+      ]
+    },
+    {
+      "name": "Card",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Container for displaying grouped content with optional header, content, and footer sections",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Standard content grouping. Most common card layout.",
+          "tokens": {
+            "background": "bg-card",
+            "text": "text-card-foreground",
+            "border": "border rounded-lg",
+            "shadow": "shadow-sm"
+          }
+        },
+        {
+          "name": "small",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Compact appearance for dense layouts. Use size='sm'.",
+          "tokens": {
+            "padding": "Reduced spacing via size prop"
+          }
+        }
+      ],
+      "subcomponents": ["CardHeader", "CardTitle", "CardDescription", "CardAction", "CardContent", "CardFooter"],
+      "accessibility": {
+        "keyboard": "Interactive elements inside cards maintain focus visibility",
+        "focus": "Focus on interactive children, not the card itself",
+        "aria": "Use CardTitle for semantic heading hierarchy. CardDescription provides context."
+      },
+      "antiPatterns": [
+        "Don't nest cards within cards without clear visual hierarchy",
+        "Don't overload card content without proper section organization",
+        "Don't use CardAction for primary content — it's for supplementary actions",
+        "Don't ignore responsive spacing on small screens"
+      ],
+      "examples": [
+        "Login form card: header + content (form) + footer (submit button)",
+        "Dashboard metric: small card with title + value",
+        "Product card: image + header + content + footer (actions)",
+        "Settings section: card grouping related options"
+      ]
+    },
+    {
+      "name": "Dialog",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Window overlaid on primary content for focused tasks — renders background inert",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Forms, details, or focused interactions that don't fit inline.",
+          "tokens": {
+            "overlay": "bg-black/80",
+            "content": "bg-background border shadow-lg rounded-lg",
+            "width": "sm:max-w-[425px]"
+          }
+        },
+        {
+          "name": "scrollable",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Long content that needs scrolling. Header stays fixed.",
+          "tokens": {
+            "scroll": "overflow-y-auto max-h-[80vh]"
+          }
+        }
+      ],
+      "subcomponents": ["DialogTrigger", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter"],
+      "accessibility": {
+        "keyboard": "Escape closes dialog. Tab cycles through interactive elements.",
+        "focus": "Focus trapped within dialog. Initial focus on first interactive element. Returns to trigger on close.",
+        "aria": "DialogTitle and DialogDescription announced to screen readers. Dialog role auto-applied."
+      },
+      "antiPatterns": [
+        "Don't use for simple confirmations — use Alert Dialog instead",
+        "Don't nest dialogs within dialogs",
+        "Don't trap users without an escape route (always support Escape key)",
+        "Don't use for navigation"
+      ],
+      "examples": [
+        "Edit profile form: dialog with form fields + save/cancel",
+        "View details: dialog showing expanded content",
+        "Settings panel: dialog with tabbed content"
+      ]
+    },
+    {
+      "name": "Badge",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Small visual indicator for status, category, or metadata labels",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Standard labeling. Primary status indicator.",
+          "tokens": {
+            "background": "bg-primary",
+            "text": "text-primary-foreground"
+          }
+        },
+        {
+          "name": "secondary",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Supplementary information. Less emphasis than default.",
+          "tokens": {
+            "background": "bg-secondary",
+            "text": "text-secondary-foreground"
+          }
+        },
+        {
+          "name": "destructive",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Negative states, errors, or critical status.",
+          "tokens": {
+            "background": "bg-destructive",
+            "text": "text-destructive-foreground"
+          }
+        },
+        {
+          "name": "outline",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Subtle emphasis. Bordered badge for lighter UI.",
+          "tokens": {
+            "border": "border",
+            "text": "text-foreground"
+          }
+        }
+      ],
+      "accessibility": {
+        "keyboard": "Not interactive by default — informational only",
+        "focus": "Focusable only when used as a link (asChild with <a>)",
+        "aria": "Screen reader support via proper DOM structure. Don't rely on color alone."
+      },
+      "antiPatterns": [
+        "Don't use badges purely for decoration without semantic meaning",
+        "Don't overload a single view with too many badge variants",
+        "Don't rely on color alone for colorblind accessibility — include text",
+        "Don't use link variant without proper aria-label"
+      ],
+      "examples": [
+        "Status indicators: 'Active' (default), 'Expired' (destructive)",
+        "Category tags: outline variant",
+        "Notification count: default variant with number",
+        "Feature labels: secondary variant ('Beta', 'New')"
+      ]
+    },
+    {
+      "name": "Select",
+      "figmaKey": "281-104714",
+      "designSystem": "ShadCN",
+      "purpose": "Dropdown list for picking from a set of options",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "281-104714",
+          "when": "Standard option selection. 5+ options or when space is limited.",
+          "tokens": {
+            "trigger": "border border-input bg-background",
+            "content": "bg-popover text-popover-foreground",
+            "item": "hover:bg-accent"
+          }
+        },
+        {
+          "name": "grouped",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Organized options with categories. Use SelectGroup + SelectLabel.",
+          "tokens": {
+            "separator": "border-b",
+            "label": "text-sm font-semibold text-muted-foreground"
+          }
+        },
+        {
+          "name": "scrollable",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Many options that need scrolling (10+ items).",
+          "tokens": {
+            "scroll": "overflow-y-auto max-h-[200px]"
+          }
+        }
+      ],
+      "subcomponents": ["SelectTrigger", "SelectValue", "SelectContent", "SelectItem", "SelectGroup", "SelectLabel", "SelectSeparator"],
+      "accessibility": {
+        "keyboard": "Arrow keys to navigate options. Enter to select. Escape to close.",
+        "focus": "Focus management within dropdown. Returns to trigger on close.",
+        "aria": "aria-invalid on SelectTrigger for error states. Label association via FieldLabel.",
+        "required": "Use FieldError for validation messages"
+      },
+      "antiPatterns": [
+        "Don't use for fewer than 5 options — use Radio Group instead",
+        "Don't show invalid state without an error message",
+        "Don't overcrowd options without grouping or scrolling",
+        "Don't mix disabled and enabled items without clear visual distinction"
+      ],
+      "examples": [
+        "Theme selector: Light / Dark / System",
+        "Country picker: grouped by region with scroll",
+        "Form field: select with label and validation"
+      ]
+    },
+    {
+      "name": "Checkbox",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Toggle control for binary checked/unchecked state — use for multi-select options",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Standard binary toggle. Terms acceptance, feature toggles, multi-select lists.",
+          "tokens": {
+            "checked": "bg-primary text-primary-foreground",
+            "unchecked": "border border-primary",
+            "focus": "focus-visible:ring-2 ring-ring"
+          }
+        },
+        {
+          "name": "with-description",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Checkbox with additional help text below the label.",
+          "tokens": {
+            "description": "text-sm text-muted-foreground"
+          }
+        }
+      ],
+      "subcomponents": ["Field", "FieldLabel", "FieldDescription"],
+      "accessibility": {
+        "keyboard": "Space to toggle. Tab to navigate between checkboxes.",
+        "focus": "Visible focus ring on the checkbox element",
+        "aria": "aria-invalid for error states. Label association via FieldLabel.",
+        "role": "checkbox role applied automatically via Radix UI"
+      },
+      "antiPatterns": [
+        "Don't use for mutually exclusive options — use Radio Group instead",
+        "Don't leave checkboxes unlabeled — always include descriptive text",
+        "Don't rely solely on color for checked/unchecked state",
+        "Don't place without proper spacing in dense layouts"
+      ],
+      "examples": [
+        "Terms acceptance: single checkbox with label",
+        "Feature toggles: grouped checkboxes with descriptions",
+        "Table row selection: checkbox in first column",
+        "Filter panel: multi-select checkboxes"
+      ]
+    },
+    {
+      "name": "Switch",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Toggle control for on/off states — use for preferences and settings",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Binary on/off toggle. Settings, preferences, feature flags.",
+          "tokens": {
+            "track-on": "bg-primary",
+            "track-off": "bg-input",
+            "thumb": "bg-background",
+            "focus": "focus-visible:ring-2 ring-ring"
+          }
+        },
+        {
+          "name": "small",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Compact switch for dense UI. Use size='small'.",
+          "tokens": {
+            "size": "Reduced dimensions via size prop"
+          }
+        }
+      ],
+      "subcomponents": ["Field", "FieldLabel", "FieldContent"],
+      "accessibility": {
+        "keyboard": "Space to toggle. Tab to navigate.",
+        "focus": "Visible focus ring",
+        "aria": "aria-invalid for error states. Label via FieldLabel.",
+        "role": "switch role applied automatically"
+      },
+      "antiPatterns": [
+        "Don't use for multi-state selections — use Radio Group or Select instead",
+        "Don't omit labels or help text",
+        "Don't place without field context or label association",
+        "Don't use disabled state without explaining why"
+      ],
+      "examples": [
+        "Dark mode toggle: switch with 'Dark mode' label",
+        "Notification settings: switch per notification type",
+        "Feature flags: switch with description text",
+        "Privacy settings: grouped switches in a card"
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "figmaKey": "YOUR_KEY_HERE",
+      "designSystem": "ShadCN",
+      "purpose": "Popup that displays contextual information on hover or keyboard focus",
+      "variants": [
+        {
+          "name": "top",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Default position. Tooltip appears above the trigger.",
+          "tokens": {
+            "side": "side=\"top\""
+          }
+        },
+        {
+          "name": "bottom",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Tooltip below trigger. Use when space above is limited.",
+          "tokens": {
+            "side": "side=\"bottom\""
+          }
+        },
+        {
+          "name": "left",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Tooltip to the left. Use in right-aligned layouts.",
+          "tokens": {
+            "side": "side=\"left\""
+          }
+        },
+        {
+          "name": "right",
+          "figmaKey": "YOUR_KEY_HERE",
+          "when": "Tooltip to the right. Use in left-aligned layouts.",
+          "tokens": {
+            "side": "side=\"right\""
+          }
+        }
+      ],
+      "subcomponents": ["TooltipProvider", "TooltipTrigger", "TooltipContent"],
+      "accessibility": {
+        "keyboard": "Triggered by focus (Tab). Dismissed on Escape.",
+        "focus": "Appears on both hover and keyboard focus",
+        "aria": "Content announced to screen readers. For disabled buttons, wrap in <span> to enable tooltip."
+      },
+      "antiPatterns": [
+        "Don't use on elements that already have visible labels",
+        "Don't put critical information only in tooltips — not discoverable on mobile",
+        "Don't use long or complex content — keep it to a short phrase",
+        "Don't use for interactive content — tooltips disappear on mouse leave"
+      ],
+      "examples": [
+        "Icon button explanation: tooltip on icon-only button",
+        "Keyboard shortcut hint: 'Save (Ctrl+S)'",
+        "Disabled button reason: wrap in span, tooltip explains why disabled",
+        "Truncated text: show full text on hover"
+      ]
+    },
+    {
+      "name": "Radio Group",
+      "figmaKey": "280-103567",
+      "designSystem": "ShadCN",
+      "purpose": "Set of mutually exclusive options where only one can be selected at a time",
+      "variants": [
+        {
+          "name": "default",
+          "figmaKey": "280-103567",
+          "when": "2-5 mutually exclusive options. Use when all options should be visible.",
+          "tokens": {
+            "selected": "border-primary text-primary",
+            "unselected": "border border-input",
+            "focus": "focus-visible:ring-2 ring-ring"
+          }
+        },
+        {
+          "name": "rich",
+          "figmaKey": "280-103567",
+          "when": "Card-style radio options with descriptions. Use for important choices needing more context.",
+          "tokens": {
+            "card": "border rounded-lg p-4",
+            "selected": "border-primary bg-primary/5"
+          }
+        }
+      ],
+      "subcomponents": ["RadioGroup", "RadioGroupItem", "Field", "FieldLabel"],
+      "accessibility": {
+        "keyboard": "Arrow keys to navigate between options. Space to select.",
+        "focus": "Focus moves between radio items with arrow keys",
+        "aria": "radiogroup role applied automatically. Each item has radio role.",
+        "required": "Use fieldset + legend for grouped radio options"
+      },
+      "antiPatterns": [
+        "Don't use for non-exclusive selections — use Checkbox instead",
+        "Don't use for 6+ options — use Select instead",
+        "Don't omit labels on individual radio items",
+        "Don't use without a group label explaining the choice"
+      ],
+      "examples": [
+        "Plan selection: rich variant with plan details",
+        "Gender/preference: default variant with simple labels",
+        "Shipping method: rich variant with price + delivery time",
+        "Sort order: default variant (newest, oldest, popular)"
+      ]
+    }
+  ],
+  "systemRules": {
+    "spacing": {
+      "base": "4px grid (0.25rem)",
+      "componentGap": "gap-2 (8px) for related elements, gap-4 (16px) for sections",
+      "padding": "p-4 (16px) for cards, p-6 (24px) for dialogs"
+    },
+    "colors": {
+      "primary": "Used for primary actions and focus states",
+      "destructive": "Reserved for errors and dangerous actions only",
+      "muted": "For secondary text and disabled states",
+      "accent": "For hover states and subtle highlights"
+    },
+    "typography": {
+      "heading": "font-semibold tracking-tight",
+      "body": "text-sm text-muted-foreground",
+      "label": "text-sm font-medium leading-none"
+    }
+  }
+}
