@@ -4,12 +4,18 @@ A conversational WCAG 2.2 accessibility assistant that runs as a Figma plugin. A
 
 ## Setup
 
+The `dist/` folder is not included in the repo. You **must** build before running the plugin:
+
 ```bash
 npm install
 npm run build
 ```
 
+This generates `dist/code.js` and `dist/index.html`, which `manifest.json` requires. Without building, the plugin will not load.
+
 Load in Figma: **Plugins → Development → Import plugin from manifest** → select `manifest.json`.
+
+If you don't want to build from source, use a pre-built zip from the **Plugin Zips** section below.
 
 ## Plugin Zips
 

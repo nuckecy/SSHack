@@ -7,18 +7,16 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-mkdirSync(resolve(__dirname, "dist"), { recursive: true });
-
 // 1. Build main thread (code.ts → code.js)
 buildSync({
   entryPoints: [resolve(__dirname, "src/code.ts")],
   bundle: true,
-  outfile: resolve(__dirname, "dist/code.js"),
+  outfile: resolve(__dirname, "code.js"),
   format: "iife",
-  target: "es2020",
+  target: "es2017",
   platform: "browser",
 });
-console.log("✓ dist/code.js");
+console.log("✓ code.js");
 
 // 2. Build UI (React app → single JS + CSS) with Tailwind CSS processing
 const tailwindPlugin = {
@@ -36,9 +34,9 @@ const uiResult = await build({
   entryPoints: [resolve(__dirname, "src/ui/index.tsx")],
   bundle: true,
   write: false,
-  outdir: resolve(__dirname, "dist"),
+  outdir: resolve(__dirname, "."),
   format: "iife",
-  target: "es2020",
+  target: "es2017",
   platform: "browser",
   jsx: "automatic",
   jsxImportSource: "react",
@@ -62,6 +60,6 @@ const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" /
   jsCode +
   '</script>\n</body>\n</html>';
 
-writeFileSync(resolve(__dirname, "dist/index.html"), html);
-console.log("✓ dist/index.html (" + Math.round(html.length / 1024) + " kB)");
+writeFileSync(resolve(__dirname, "index.html"), html);
+console.log("✓ index.html (" + Math.round(html.length / 1024) + " kB)");
 console.log("Build complete.");

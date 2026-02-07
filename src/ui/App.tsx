@@ -1,15 +1,20 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import ChatView from "./components/ChatView";
 import SettingsPanel from "./components/SettingsPanel";
+import SuggestionChips from "./components/SuggestionChips";
+import SelectionPanel from "./components/SelectionPanel";
 import Icon from "./components/Icon";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
-import type { Message, ProviderId, ProviderKeys } from "./providers/types";
-import { PROVIDER_IDS } from "./providers/registry";
+import type { Message, ProviderId, ProviderKeys, SelectionData } from "./providers/types";
+import { PROVIDER_CONFIGS, PROVIDER_IDS } from "./providers/registry";
 
 const STORAGE_PREFIX = "ss_key_";
 const STORAGE_ACTIVE = "ss_active_provider";
 const OLD_STORAGE_KEY = "ss_gemini_key";
+
+const WIDTH_PANEL_OPEN = 770;
+const WIDTH_PANEL_CLOSED = 483;
 
 const EMPTY_KEYS: ProviderKeys = { gemini: "", anthropic: "", openai: "" };
 
@@ -29,6 +34,13 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [providerKeys, setProviderKeys] = useState<ProviderKeys>(EMPTY_KEYS);
   const [activeProvider, setActiveProvider] = useState<ProviderId>("gemini");
+  const [showPanel, setShowPanel] = useState(true);
+  const [selectionData, setSelectionData] = useState<SelectionData | null>(null);
+  const [additionalSelectionCount, setAdditionalSelectionCount] = useState(0);
+
+  // Ref to allow ChatView's chip handler to access current state
+  const chipQueryRef = useRef<string | null>(null);
+  const [chipTrigger, setChipTrigger] = useState(0);
 
   // Load all provider keys and active provider on mount
   useEffect(() => {
@@ -68,6 +80,15 @@ export default function App() {
     // Also request from Figma clientStorage as fallback
     const handler = (event: MessageEvent) => {
       const msg = event.data.pluginMessage;
+      if (msg?.type === "selection-changed") {
+        if (msg.data) {
+          setSelectionData(msg.data);
+          setAdditionalSelectionCount(msg.data.additionalCount || 0);
+        } else {
+          setSelectionData(null);
+          setAdditionalSelectionCount(0);
+        }
+      }
       if (msg?.type === "storage-get-result") {
         if (msg.key === STORAGE_ACTIVE) {
           const val = msg.value as ProviderId;
@@ -126,7 +147,16 @@ export default function App() {
 
   const handleClearChat = useCallback(() => {
     setMessages([]);
+    setSelectionData(null);
+    setAdditionalSelectionCount(0);
   }, []);
+
+  const handleChipClick = useCallback((query: string) => {
+    chipQueryRef.current = query;
+    setChipTrigger((t) => t + 1);
+  }, []);
+
+  const providerDisplayName = PROVIDER_CONFIGS[activeProvider]?.name || activeProvider;
 
   return (
     <div className="app">
@@ -177,11 +207,62 @@ export default function App() {
         />
       ) : (
         <div className="app-body">
+          {showPanel && (
+            <aside className="side-panel">
+              <div className="side-panel-content">
+                {messages.length === 0 && !selectionData ? (
+                  <>
+                    <div className="side-panel-welcome">
+                      <strong>System Sidekick</strong>
+                      <p>
+                        WCAG 2.2 accessibility assistant.
+                        Select any layer to inspect it, or ask a question.
+                      </p>
+                      <div className="side-panel-features">
+                        <span>Canvas inspection</span>
+                        <span>WCAG guidance</span>
+                        {hasApiKey ? <span>{providerDisplayName} AI</span> : <span>Keyword search</span>}
+                      </div>
+                    </div>
+                    <div className="side-panel-section">
+                      <span className="side-panel-label">Try asking:</span>
+                      <SuggestionChips onChipClick={handleChipClick} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="side-panel-section">
+                      <span className="side-panel-label">Quick prompts</span>
+                      <SuggestionChips onChipClick={handleChipClick} />
+                    </div>
+                    {selectionData && (
+                      <div className="side-panel-section">
+                        <span className="side-panel-label">Selected Element</span>
+                        <SelectionPanel selectionData={selectionData} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="side-panel-footer">
+                <Button variant="ghost" size="icon-sm" onClick={() => setShowSettings(!showSettings)} title="Settings">
+                  <Icon name="settings" size={16} />
+                </Button>
+                <Button variant="ghost" size="icon-sm" onClick={handleClearChat} title="Clear chat">
+                  <Icon name="delete" size={16} />
+                </Button>
+              </div>
+            </aside>
+          )}
           <ChatView
             messages={messages}
             setMessages={setMessages}
             apiKey={activeKey}
             activeProvider={activeProvider}
+            chipQueryRef={chipQueryRef}
+            chipTrigger={chipTrigger}
+            selectionData={selectionData}
+            additionalSelectionCount={additionalSelectionCount}
           />
         </div>
       )}

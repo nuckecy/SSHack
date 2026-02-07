@@ -1,20 +1,23 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import type { Message, ConversationTurn, WCAGCriterion, ProviderId } from "../providers/types";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import type { Message, ConversationTurn, WCAGCriterion, ProviderId, SelectionData } from "../providers/types";
 import { PROVIDERS } from "../providers/registry";
 import { buildPrompt } from "../knowledge/prompt-builder";
 import { searchWCAG } from "../knowledge/search";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
-import SuggestionChips from "./SuggestionChips";
+import SelectionBar from "./SelectionBar";
 import Icon from "./Icon";
 import { Button } from "./ui/button";
-import { ScrollArea } from "./ui/scroll-area";
 
 interface ChatViewProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   apiKey: string;
   activeProvider: ProviderId;
+  chipQueryRef: React.MutableRefObject<string | null>;
+  chipTrigger: number;
+  selectionData: SelectionData | null;
+  additionalSelectionCount: number;
 }
 
 // Meta queries that get hardcoded responses
@@ -32,9 +35,10 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function ChatView({ messages, setMessages, apiKey, activeProvider }: ChatViewProps) {
+export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger, selectionData, additionalSelectionCount }: ChatViewProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const historyRef = useRef<ConversationTurn[]>([]);
@@ -45,7 +49,7 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingMsgId]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -80,10 +84,18 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, msg]);
+      // Trigger streaming for bot messages
+      if (role === "bot") {
+        setStreamingMsgId(msg.id);
+      }
       return msg;
     },
     [setMessages]
   );
+
+  const handleStreamingDone = useCallback(() => {
+    setStreamingMsgId(null);
+  }, []);
 
   const handleSend = useCallback(async () => {
     const query = input.trim();
@@ -102,7 +114,7 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     setIsLoading(true);
 
     try {
-      const { systemPrompt, matchedCriteria } = buildPrompt(query);
+      const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
 
       if (hasApiKey) {
         try {
@@ -155,14 +167,14 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, hasApiKey, apiKey, activeProvider, addMessage]);
+  }, [input, isLoading, hasApiKey, apiKey, activeProvider, addMessage, selectionData]);
 
   const handleChipClick = useCallback((query: string) => {
     setInput("");
     addMessage("user", query);
     setIsLoading(true);
 
-    const { systemPrompt, matchedCriteria } = buildPrompt(query);
+    const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
 
     if (hasApiKey) {
       PROVIDERS[activeProvider].sendMessage(
@@ -195,7 +207,56 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
       }
       setIsLoading(false);
     }
-  }, [hasApiKey, apiKey, activeProvider, addMessage]);
+  }, [hasApiKey, apiKey, activeProvider, addMessage, selectionData]);
+
+  // Watch for chip trigger from parent
+  useEffect(() => {
+    if (chipTrigger > 0 && chipQueryRef.current) {
+      const query = chipQueryRef.current;
+      chipQueryRef.current = null;
+      handleChipClick(query);
+    }
+  }, [chipTrigger, chipQueryRef, handleChipClick]);
+
+  const handleAskAbout = useCallback((query: string) => {
+    setInput(query);
+    setTimeout(() => {
+      addMessage("user", query);
+      setIsLoading(true);
+      const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
+      if (hasApiKey) {
+        PROVIDERS[activeProvider].sendMessage(
+          query,
+          systemPrompt,
+          historyRef.current.slice(-MAX_HISTORY_TURNS),
+          apiKey
+        )
+          .then((aiResponse) => {
+            historyRef.current.push(
+              { role: "user", text: query },
+              { role: "assistant", text: aiResponse }
+            );
+            addMessage("bot", aiResponse, matchedCriteria.length > 0 ? matchedCriteria : undefined);
+          })
+          .catch(() => {
+            if (matchedCriteria.length > 0) {
+              addMessage("bot", "Here's what I found:", matchedCriteria);
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+            setInput("");
+          });
+      } else {
+        const results = searchWCAG(query, 5);
+        if (results.length > 0) {
+          addMessage("bot", `Found ${results.length} relevant success criteria:`, results.map((r) => r.criterion));
+        }
+        setIsLoading(false);
+        setInput("");
+      }
+    }, 0);
+  }, [selectionData, hasApiKey, apiKey, activeProvider, addMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -208,31 +269,26 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
 
   return (
     <div className="chat-view">
-      <ScrollArea className="flex-1">
-        <div className="messages-area">
-          {isEmpty ? (
-            <div className="welcome-hero">
-              <div className="welcome-hero-image">
-                <Icon name="sparkle" size={40} className="welcome-sparkle-icon" />
-              </div>
-              <h2 className="welcome-hero-title">Your Design System Assistant</h2>
-              <p className="welcome-hero-subtitle">
-                Ask me anything about components, tokens, patterns, or accessibility guidelines.
-              </p>
-              <SuggestionChips onChipClick={handleChipClick} />
-              <p className="welcome-hero-hint">Type a message to start designing</p>
-            </div>
-          ) : (
-            <>
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
-              {isLoading && <TypingIndicator />}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+      <div className="messages-area">
+        {messages.map((msg) => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            isStreaming={msg.id === streamingMsgId}
+            onStreamingDone={handleStreamingDone}
+          />
+        ))}
+
+        {isLoading && <TypingIndicator />}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      <SelectionBar
+        selectionData={selectionData}
+        additionalCount={additionalSelectionCount}
+        onAskAbout={handleAskAbout}
+      />
 
       <div className="input-area">
         <div className="input-wrapper">
@@ -247,13 +303,13 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
-            disabled={isLoading}
+            disabled={isLoading || streamingMsgId !== null}
           />
           <Button
             size="icon"
             className="rounded-full h-9 w-9 shrink-0"
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || streamingMsgId !== null}
           >
             <Icon name="send_plane" size={16} />
           </Button>

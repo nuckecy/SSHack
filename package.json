@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "concurrently \"vite build --watch --mode development\" \"tsc --watch --noEmit\"",
     "build": "tsc --noEmit && node build.mjs",
+    "zip": "node zip.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
