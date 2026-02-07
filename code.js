@@ -2,7 +2,7 @@
 (() => {
   // src/code.ts
   figma.showUI(__html__, {
-    width: 770,
+    width: 420,
     height: 640,
     themeColors: true
   });
