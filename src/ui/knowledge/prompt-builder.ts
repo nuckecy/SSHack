@@ -1,4 +1,4 @@
-import type { WCAGCriterion } from "../providers/types";
+import type { WCAGCriterion, SelectionData, SerializedChildNode } from "../providers/types";
 import { searchWCAG } from "./search";
 
 // ─── Component Shortcut Mappings ────────────────────────────────────
@@ -513,6 +513,7 @@ When the user's Figma selection context is provided (format: [Figma selection: .
 - Consider the selection's type and dimensions when recommending sizes/variants.
 - If the selection is a component, check if it matches an anti-pattern and proactively advise.
 - If the selection suggests a pattern (e.g., a form frame), recommend the full pattern, not just individual components.
+- When a selected element is provided, analyze it for potential accessibility issues and reference its specific properties.
 
 ## 8. Critical Rules (Always Follow)
 
@@ -550,10 +551,129 @@ function formatSCForContext(sc: WCAGCriterion): string {
 }
 
 /**
+ * Extract text content from child tree (max 10 entries).
+ */
+function flattenTextNodes(children: SerializedChildNode[], result: string[] = []): string[] {
+  for (const child of children) {
+    if (result.length >= 10) break;
+    if (child.characters) {
+      result.push(child.characters.slice(0, 100));
+    }
+    if (child.children) {
+      flattenTextNodes(child.children, result);
+    }
+  }
+  return result;
+}
+
+/**
+ * Formats selection data into a context block for the AI prompt.
+ */
+function formatSelectionContext(sel: SelectionData): string {
+  const lines: string[] = ["CURRENTLY SELECTED ELEMENT:"];
+
+  lines.push(`- Name: "${sel.name}"`);
+  lines.push(`- Type: ${sel.type}`);
+  lines.push(`- Dimensions: ${sel.width}x${sel.height}px`);
+
+  if (sel.opacity != null && sel.opacity < 1) {
+    lines.push(`- Opacity: ${Math.round(sel.opacity * 100)}%`);
+  }
+
+  if (!sel.visible) {
+    lines.push(`- Visibility: HIDDEN`);
+  }
+
+  // Component info
+  if (sel.componentInfo) {
+    const ci = sel.componentInfo;
+    let compLine = `- Component: ${ci.componentName}`;
+    if (ci.componentSetName) {
+      compLine += ` (from set: ${ci.componentSetName})`;
+    }
+    if (ci.isRemote) {
+      compLine += ` [library component]`;
+    }
+    lines.push(compLine);
+
+    if (ci.variantProperties && Object.keys(ci.variantProperties).length > 0) {
+      const variants = Object.entries(ci.variantProperties)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(", ");
+      lines.push(`- Variants: ${variants}`);
+    }
+
+    if (ci.description) {
+      lines.push(`- Component description: ${ci.description.slice(0, 200)}`);
+    }
+  }
+
+  // Text content
+  if (sel.textProps) {
+    const tp = sel.textProps;
+    lines.push(`- Text content: "${tp.characters.slice(0, 200)}"`);
+    if (tp.fontSize !== "MIXED") {
+      lines.push(`- Font size: ${tp.fontSize}px`);
+    }
+    if (tp.fontName !== "MIXED") {
+      lines.push(`- Font: ${tp.fontName}`);
+    }
+  }
+
+  // Fills
+  if (sel.fills && sel.fills.length > 0) {
+    const visibleFills = sel.fills.filter((f) => f.visible && f.color);
+    if (visibleFills.length > 0) {
+      lines.push(`- Fill colors: ${visibleFills.map((f) => f.color).join(", ")}`);
+    }
+  }
+
+  // Strokes
+  if (sel.strokes && sel.strokes.length > 0) {
+    const visibleStrokes = sel.strokes.filter((f) => f.visible && f.color);
+    if (visibleStrokes.length > 0) {
+      lines.push(`- Stroke colors: ${visibleStrokes.map((f) => f.color).join(", ")}`);
+      if (sel.strokeWeight != null) {
+        lines.push(`- Stroke weight: ${sel.strokeWeight === "MIXED" ? "Mixed" : sel.strokeWeight + "px"}`);
+      }
+    }
+  }
+
+  // Corner radius
+  if (sel.cornerRadius != null && sel.cornerRadius !== 0) {
+    lines.push(`- Corner radius: ${sel.cornerRadius === "MIXED" ? "Mixed" : sel.cornerRadius + "px"}`);
+  }
+
+  // Auto-layout
+  if (sel.autoLayout) {
+    const al = sel.autoLayout;
+    lines.push(`- Auto-layout: ${al.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical"}, gap=${al.itemSpacing}px, padding=${al.paddingTop} ${al.paddingRight} ${al.paddingBottom} ${al.paddingLeft}`);
+  }
+
+  // Children summary
+  if (sel.descendantCount > 0) {
+    lines.push(`- Contains ${sel.descendantCount} child layers`);
+  }
+
+  // Text content in children
+  if (sel.children && sel.children.length > 0) {
+    const texts = flattenTextNodes(sel.children);
+    if (texts.length > 0) {
+      lines.push(`- Text content in children: ${texts.map((t) => `"${t}"`).join(", ")}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/**
  * Builds the full system prompt with relevant WCAG context for a given query.
  * Returns both the prompt and the matched criteria (for fallback display).
  */
-export function buildPrompt(query: string): {
+export function buildPrompt(
+  query: string,
+  selectionData?: SelectionData | null
+): {
   systemPrompt: string;
   matchedCriteria: WCAGCriterion[];
 } {
@@ -565,19 +685,17 @@ export function buildPrompt(query: string): {
   const results = searchWCAG(query, 5);
   const matchedCriteria = results.map((r) => r.criterion);
 
-  if (matchedCriteria.length === 0) {
-    return {
-      systemPrompt: SYSTEM_PROMPT_BASE,
-      matchedCriteria: [],
-    };
+  let systemPrompt = SYSTEM_PROMPT_BASE;
+
+  // Inject selection context if available
+  if (selectionData) {
+    systemPrompt += `\n\n${formatSelectionContext(selectionData)}`;
   }
 
-  const contextBlock = matchedCriteria.map(formatSCForContext).join("\n\n");
-
-  const systemPrompt = `${SYSTEM_PROMPT_BASE}
-
-CONTEXT (relevant WCAG success criteria for this query):
-${contextBlock}`;
+  if (matchedCriteria.length > 0) {
+    const contextBlock = matchedCriteria.map(formatSCForContext).join("\n\n");
+    systemPrompt += `\n\nCONTEXT (relevant WCAG success criteria for this query):\n${contextBlock}`;
+  }
 
   return { systemPrompt, matchedCriteria };
 }

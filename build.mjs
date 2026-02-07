@@ -11,7 +11,7 @@ buildSync({
   bundle: true,
   outfile: resolve(__dirname, "code.js"),
   format: "iife",
-  target: "es2020",
+  target: "es2017",
   platform: "browser",
 });
 console.log("✓ code.js");
@@ -23,7 +23,7 @@ const uiResult = buildSync({
   write: false,
   outdir: resolve(__dirname, "."),
   format: "iife",
-  target: "es2020",
+  target: "es2017",
   platform: "browser",
   jsx: "automatic",
   jsxImportSource: "react",

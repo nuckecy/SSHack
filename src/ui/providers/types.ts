@@ -53,3 +53,75 @@ export interface ProviderKeys {
   anthropic: string;
   openai: string;
 }
+
+// ─── Canvas Selection Types ────────────────────────────────────
+
+export interface SerializedPaint {
+  type: string;
+  visible: boolean;
+  opacity: number;
+  color?: string;       // hex string e.g. "#007AFF"
+  display?: string;     // human-readable e.g. "#007AFF 100%"
+}
+
+export interface SerializedAutoLayout {
+  layoutMode: "HORIZONTAL" | "VERTICAL";
+  itemSpacing: number;
+  paddingTop: number;
+  paddingRight: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  primaryAxisAlignItems?: string;
+  counterAxisAlignItems?: string;
+}
+
+export interface SerializedTextProps {
+  characters: string;
+  fontSize: number | "MIXED";
+  fontName: string | "MIXED";
+  lineHeight: string | "MIXED";
+  letterSpacing: string | "MIXED";
+  textAlignHorizontal: string;
+  textAlignVertical: string;
+}
+
+export interface SerializedComponentInfo {
+  componentName: string;
+  description: string;
+  isRemote: boolean;
+  key: string;
+  variantProperties?: Record<string, string>;
+  componentSetName?: string;
+}
+
+export interface SerializedChildNode {
+  id: string;
+  name: string;
+  type: string;
+  visible: boolean;
+  width?: number;
+  height?: number;
+  characters?: string;
+  fills?: SerializedPaint[];
+  children?: SerializedChildNode[];
+}
+
+export interface SelectionData {
+  id: string;
+  name: string;
+  type: string;
+  width: number;
+  height: number;
+  opacity: number;
+  visible: boolean;
+  fills?: SerializedPaint[];
+  strokes?: SerializedPaint[];
+  strokeWeight?: number | "MIXED";
+  cornerRadius?: number | "MIXED";
+  autoLayout?: SerializedAutoLayout;
+  textProps?: SerializedTextProps;
+  componentInfo?: SerializedComponentInfo;
+  children?: SerializedChildNode[];
+  descendantCount: number;
+  timestamp: number;
+}

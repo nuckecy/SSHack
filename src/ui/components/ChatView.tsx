@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import type { Message, ConversationTurn, WCAGCriterion, ProviderId } from "../providers/types";
+import type { Message, ConversationTurn, WCAGCriterion, ProviderId, SelectionData } from "../providers/types";
 import { PROVIDERS } from "../providers/registry";
 import { buildPrompt } from "../knowledge/prompt-builder";
 import { searchWCAG } from "../knowledge/search";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
+import SelectionBar from "./SelectionBar";
 
 interface ChatViewProps {
   messages: Message[];
@@ -13,6 +14,8 @@ interface ChatViewProps {
   activeProvider: ProviderId;
   chipQueryRef: React.MutableRefObject<string | null>;
   chipTrigger: number;
+  selectionData: SelectionData | null;
+  additionalSelectionCount: number;
 }
 
 // Meta queries that get hardcoded responses
@@ -30,9 +33,10 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger }: ChatViewProps) {
+export default function ChatView({ messages, setMessages, apiKey, activeProvider, chipQueryRef, chipTrigger, selectionData, additionalSelectionCount }: ChatViewProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const historyRef = useRef<ConversationTurn[]>([]);
@@ -43,14 +47,14 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingMsgId]);
 
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      const lineHeight = 18.2; // 13px font * 1.4 line-height
+      const lineHeight = 18.2;
       const maxHeight = lineHeight * 10;
       textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
       const isScrollable = textarea.scrollHeight > maxHeight;
@@ -78,10 +82,18 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, msg]);
+      // Trigger streaming for bot messages
+      if (role === "bot") {
+        setStreamingMsgId(msg.id);
+      }
       return msg;
     },
     [setMessages]
   );
+
+  const handleStreamingDone = useCallback(() => {
+    setStreamingMsgId(null);
+  }, []);
 
   const handleSend = useCallback(async () => {
     const query = input.trim();
@@ -100,10 +112,9 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     setIsLoading(true);
 
     try {
-      const { systemPrompt, matchedCriteria } = buildPrompt(query);
+      const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
 
       if (hasApiKey) {
-        // AI mode: send to active provider with WCAG context
         try {
           const aiResponse = await PROVIDERS[activeProvider].sendMessage(
             query,
@@ -112,16 +123,13 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
             apiKey
           );
 
-          // Update conversation history
           historyRef.current.push(
             { role: "user", text: query },
             { role: "assistant", text: aiResponse }
           );
 
-          // Add bot message with optional SC cards
           addMessage("bot", aiResponse, matchedCriteria.length > 0 ? matchedCriteria : undefined);
         } catch (err) {
-          // AI failed — fall back to keyword results
           const errorMsg =
             err instanceof Error ? err.message : "Unknown error";
           console.error("AI error:", errorMsg);
@@ -140,7 +148,6 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
           }
         }
       } else {
-        // Keyword-only mode
         const results = searchWCAG(query, 5);
         if (results.length > 0) {
           addMessage(
@@ -158,14 +165,14 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, hasApiKey, apiKey, activeProvider, addMessage]);
+  }, [input, isLoading, hasApiKey, apiKey, activeProvider, addMessage, selectionData]);
 
   // Handle chip clicks from side panel
   const processChipQuery = useCallback((query: string) => {
     addMessage("user", query);
     setIsLoading(true);
 
-    const { systemPrompt, matchedCriteria } = buildPrompt(query);
+    const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
 
     if (hasApiKey) {
       PROVIDERS[activeProvider].sendMessage(
@@ -198,7 +205,7 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
       }
       setIsLoading(false);
     }
-  }, [hasApiKey, apiKey, activeProvider, addMessage]);
+  }, [hasApiKey, apiKey, activeProvider, addMessage, selectionData]);
 
   // Watch for chip trigger from parent
   useEffect(() => {
@@ -208,6 +215,46 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
       processChipQuery(query);
     }
   }, [chipTrigger, chipQueryRef, processChipQuery]);
+
+  const handleAskAbout = useCallback((query: string) => {
+    setInput(query);
+    setTimeout(() => {
+      addMessage("user", query);
+      setIsLoading(true);
+      const { systemPrompt, matchedCriteria } = buildPrompt(query, selectionData);
+      if (hasApiKey) {
+        PROVIDERS[activeProvider].sendMessage(
+          query,
+          systemPrompt,
+          historyRef.current.slice(-MAX_HISTORY_TURNS),
+          apiKey
+        )
+          .then((aiResponse) => {
+            historyRef.current.push(
+              { role: "user", text: query },
+              { role: "assistant", text: aiResponse }
+            );
+            addMessage("bot", aiResponse, matchedCriteria.length > 0 ? matchedCriteria : undefined);
+          })
+          .catch(() => {
+            if (matchedCriteria.length > 0) {
+              addMessage("bot", "Here's what I found:", matchedCriteria);
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+            setInput("");
+          });
+      } else {
+        const results = searchWCAG(query, 5);
+        if (results.length > 0) {
+          addMessage("bot", `Found ${results.length} relevant success criteria:`, results.map((r) => r.criterion));
+        }
+        setIsLoading(false);
+        setInput("");
+      }
+    }, 0);
+  }, [selectionData, hasApiKey, apiKey, activeProvider, addMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -220,13 +267,24 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
     <div className="chat-view">
       <div className="messages-area">
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            isStreaming={msg.id === streamingMsgId}
+            onStreamingDone={handleStreamingDone}
+          />
         ))}
 
         {isLoading && <TypingIndicator />}
 
         <div ref={messagesEndRef} />
       </div>
+
+      <SelectionBar
+        selectionData={selectionData}
+        additionalCount={additionalSelectionCount}
+        onAskAbout={handleAskAbout}
+      />
 
       <div className="input-area">
         <textarea
@@ -237,12 +295,12 @@ export default function ChatView({ messages, setMessages, apiKey, activeProvider
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
-          disabled={isLoading}
+          disabled={isLoading || streamingMsgId !== null}
         />
         <button
           className="send-btn"
           onClick={handleSend}
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim() || isLoading || streamingMsgId !== null}
         >
           ↑
         </button>
