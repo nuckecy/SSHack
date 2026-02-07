@@ -1,6 +1,71 @@
 import type { WCAGCriterion } from "../providers/types";
 import { searchWCAG } from "./search";
 
+// ─── Component Shortcut Mappings ────────────────────────────────────
+// Maps common design queries to component names in the system prompt.
+
+const COMPONENT_SHORTCUTS: Record<string, string[]> = {
+  "alert dialog": ["Alert Dialog"],
+  "alert dialogue": ["Alert Dialog"],
+  "radio group": ["Radio Group"],
+  "text field": ["Input"],
+  "text input": ["Input"],
+  "on off": ["Switch"],
+  button: ["Button"],
+  btn: ["Button"],
+  cta: ["Button"],
+  action: ["Button"],
+  submit: ["Button", "Input"],
+  alert: ["Alert"],
+  notification: ["Alert"],
+  callout: ["Alert"],
+  confirm: ["Alert Dialog"],
+  confirmation: ["Alert Dialog"],
+  delete: ["Alert Dialog", "Button"],
+  modal: ["Dialog", "Alert Dialog"],
+  dialog: ["Dialog"],
+  overlay: ["Dialog", "Alert Dialog"],
+  popup: ["Dialog", "Tooltip"],
+  form: ["Input", "Select", "Checkbox", "Switch", "Radio Group"],
+  input: ["Input"],
+  dropdown: ["Select"],
+  select: ["Select"],
+  picker: ["Select"],
+  card: ["Card"],
+  container: ["Card"],
+  badge: ["Badge"],
+  tag: ["Badge"],
+  status: ["Badge"],
+  checkbox: ["Checkbox"],
+  "multi-select": ["Checkbox"],
+  toggle: ["Switch", "Checkbox"],
+  switch: ["Switch"],
+  preference: ["Switch"],
+  tooltip: ["Tooltip"],
+  hint: ["Tooltip"],
+  radio: ["Radio Group"],
+  option: ["Radio Group", "Select"],
+  settings: ["Switch", "Dialog"],
+};
+
+// Sorted longest-first so multi-word shortcuts match before single-word ones.
+const SORTED_COMPONENT_SHORTCUTS = Object.keys(COMPONENT_SHORTCUTS).sort(
+  (a, b) => b.length - a.length
+);
+
+/**
+ * Finds component names that match the user's query via shortcut mappings.
+ */
+function findMatchedComponents(query: string): string[] {
+  const q = query.trim().toLowerCase();
+  for (const shortcut of SORTED_COMPONENT_SHORTCUTS) {
+    if (q.includes(shortcut)) {
+      return COMPONENT_SHORTCUTS[shortcut];
+    }
+  }
+  return [];
+}
+
 const SYSTEM_PROMPT_BASE = `You are **System Sidekick**, an AI design assistant embedded in Figma. You help designers use the ShadCN design system correctly by recommending the right components, variants, tokens, and accessibility patterns.
 
 ## 1. Identity & Boundaries
@@ -492,6 +557,11 @@ export function buildPrompt(query: string): {
   systemPrompt: string;
   matchedCriteria: WCAGCriterion[];
 } {
+  const matchedComponents = findMatchedComponents(query);
+  if (matchedComponents.length > 0) {
+    console.log("[System Sidekick] Matched components:", matchedComponents);
+  }
+
   const results = searchWCAG(query, 5);
   const matchedCriteria = results.map((r) => r.criterion);
 
