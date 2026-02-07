@@ -1,0 +1,17 @@
+[
+  { "id": "alert", "name": "Alert", "figmaKey": "4d087b2a45937db2a0dae72ef45cd5439e3d05d5" },
+  { "id": "alert-dialog", "name": "Alert Dialog", "figmaKey": "5ec2ea8cc19e86eabbc97009dcfd09c278df5d15" },
+  { "id": "badge", "name": "Badge", "figmaKey": "9f1d7f74487b9fb495d8ec983b56524a8c880d56" },
+  { "id": "button", "name": "Button", "figmaKey": "96c2d89a4708a7d5b8f24ff7a1811cdac494f0c1" },
+  { "id": "card", "name": "Card", "figmaKey": "0d0593d7566998757474f2332e175189fff62324" },
+  { "id": "checkbox", "name": "Checkbox", "figmaKey": "a32542edf78409a815f0207db8f95c311e2df7a2" },
+  { "id": "dialog", "name": "Dialog", "figmaKey": "2f06d4e1b267f63ebd8cd5036d28ed53054e1a0" },
+  { "id": "hover-card", "name": "Hover Card", "figmaKey": "8b051d04c608d5def0db97ca6832051c11b24bb7" },
+  { "id": "input", "name": "Input", "figmaKey": "cab7a702a3b694c3020e053f2fd56298cbede750" },
+  { "id": "navigation-menu", "name": "Navigation Menu", "figmaKey": "9094a387713908f449b6827ac01deff4a4cddb24" },
+  { "id": "radio", "name": "Radio", "figmaKey": "dcf0893d3b8f903343da59b64d370e98062012b7" },
+  { "id": "radio-group", "name": "Radio Group", "figmaKey": "20be41c05b9404f9b6089a724ba1bb9a76f14ea3" },
+  { "id": "select", "name": "Select", "figmaKey": "32b979d28da779733189397c84a5dc15c606c904" },
+  { "id": "switch", "name": "Switch", "figmaKey": "aca9f69add49b84c30db9d138358601b33b4e744" },
+  { "id": "tooltip", "name": "Tooltip", "figmaKey": "bcf0e4a897bd9c962d74ea5deab85ac3b2626afd" }
+]
