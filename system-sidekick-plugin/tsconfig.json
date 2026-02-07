@@ -1,0 +1,10 @@
+{
+  "extends": "@create-figma-plugin/tsconfig",
+  "compilerOptions": {
+    "typeRoots": [
+      "node_modules/@figma/plugin-typings",
+      "node_modules/@types"
+    ]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

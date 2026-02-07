@@ -1,0 +1,26 @@
+{
+  "name": "system-sidekick-plugin",
+  "version": "1.0.0",
+  "description": "AI-powered ShadCN design system guidance for Figma",
+  "figma-plugin": {
+    "editorType": ["figma"],
+    "id": "system-sidekick",
+    "name": "System Sidekick",
+    "main": "src/main.ts",
+    "ui": "src/ui.tsx"
+  },
+  "scripts": {
+    "build": "build-figma-plugin --typecheck --minify",
+    "watch": "build-figma-plugin --typecheck --watch"
+  },
+  "dependencies": {
+    "@create-figma-plugin/ui": "^3.2.0",
+    "preact": "^10.24.0"
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "^3.2.0",
+    "@create-figma-plugin/tsconfig": "^3.2.0",
+    "@figma/plugin-typings": "^1.100.0",
+    "typescript": "^5.6.0"
+  }
+}
