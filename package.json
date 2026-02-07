@@ -1,0 +1,24 @@
+{
+  "name": "system-sidekick",
+  "version": "0.1.0",
+  "description": "WCAG 2.2 accessibility assistant Figma plugin",
+  "scripts": {
+    "dev": "concurrently \"vite build --watch --mode development\" \"tsc --watch --noEmit\"",
+    "build": "tsc --noEmit && node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.100.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3",
+    "vite-plugin-singlefile": "^2.0.3"
+  }
+}
